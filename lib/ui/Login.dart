@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../api_service/AuthController.dart';
+import '../api_service/ApiController.dart';
 
 class LoginScreen extends StatelessWidget {
   final ApiController authController = Get.put(ApiController());
@@ -10,6 +10,8 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    phoneController.text = "8801627561556";
+    passwordController.text = "123456";
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
