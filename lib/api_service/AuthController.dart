@@ -1,11 +1,13 @@
-import 'package:flutter_fz_task/utils/PopupUtils.dart';
+
 import 'package:get/get.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../Constant.dart';
 import '../models/Parcel.dart';
 import '../models/User.dart';
+import '../utils/Utils.dart';
 
 class ApiController extends GetxController {
   var user = User(id: '', fullName: '', phone: '', email: '', token: '').obs;
@@ -14,7 +16,7 @@ class ApiController extends GetxController {
   Future<void> loginUser(String phone, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('https://demo.zfcourier.xyz/api/v/1.0.0/auth/login'),
+        Uri.parse('$baseUrl/auth/login'),
         headers: <String, String>{
           'Content-Type': 'application/json',
         },
@@ -52,13 +54,13 @@ class ApiController extends GetxController {
 
   Future<void> fetchParcels(String token, Map<String, String> queryParams) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      String url = 'https://demo.zfcourier.xyz/api/v/1.0.0/parcels';
+
+      String url = '$baseUrl/parcels';
       if (queryParams != null && queryParams.isNotEmpty) {
         url += '?' + Uri(queryParameters: queryParams).query;
       }
-
+      SharedPreferences prefs = await SharedPreferences.getInstance();
       final response = await http.get(
         Uri.parse(url),
         headers: <String, String>{
@@ -74,12 +76,11 @@ class ApiController extends GetxController {
           recipientName: json['recipientName'],
           recipientPhone: json['recipientPhone'],
           recipientCity: json['recipientCity'],
-          recipientArea: json['recipientArea'],
-          recipientAddress: json['recipientAddress'],
-          amountToCollect: json['amountToCollect'].toDouble(),
-          itemDescription: json['itemDescription'],
-          itemQuantity: json['itemQuantity'],
-          itemWeight: json['itemWeight'],
+          recipientArea: json['recipientArea']??"N/A",
+          recipientAddress: json['recipientAddress']??"N/A",
+          invoice: json['invoice']??"N/A",
+          amountToCollect: json['amountToCollect'].toDouble()??"N/A",
+
         ))
             .toList();
         parcels.assignAll(fetchedParcels);
@@ -91,6 +92,7 @@ class ApiController extends GetxController {
       }
     } catch (e) {
       // Handle errors here
+
       print(e.toString());
     }
   }
@@ -98,7 +100,7 @@ class ApiController extends GetxController {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       final response = await http.post(
-        Uri.parse('https://demo.zfcourier.xyz/api/v/1.0.0/parcels/create'),
+        Uri.parse('$baseUrl/parcels/create'),
         headers: <String, String>{
           'x-auth-token': prefs.getString('auth_token') ?? token,
           'Content-Type': 'application/json',
@@ -108,6 +110,7 @@ class ApiController extends GetxController {
 
       if (response.statusCode == 200) {
         // Parcel created successfully, you can handle any additional logic here
+        fetchParcels('', {});
         print('Parcel created successfully');
       } else {
         PopupUtils.showPopup(json.decode(response.body)['message']);
@@ -115,6 +118,36 @@ class ApiController extends GetxController {
       }
     } catch (e) {
       print(e.toString());
+    }
+  }
+  Future<void> updateParcel(String parcelId, Map<String, dynamic> parcelData) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String authToken = prefs.getString('auth_token') ?? "";
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/parcels/update/$parcelId'),
+        headers: <String, String>{
+          'x-auth-token': authToken,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(parcelData),
+      );
+
+      if (response.statusCode == 200) {
+        print('Parcel updated successfully');
+        fetchParcels('', {});
+        // Handle success if needed
+      } else {
+        // Handle error
+        PopupUtils.showPopup(json.decode(response.body)['message']);
+        print('Failed to update parcel: ${response.body}');
+        throw Exception('Failed to update parcel');
+      }
+    } catch (e) {
+      // Handle errors here
+      print('Error updating parcel: $e');
+      throw Exception('Error updating parcel: $e');
     }
   }
 
