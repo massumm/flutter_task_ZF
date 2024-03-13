@@ -6,10 +6,9 @@ class Parcel {
   final String recipientCity;
   final String recipientArea;
   final String recipientAddress;
+  final String invoice;
   final double amountToCollect;
-  final String itemDescription;
-  final int itemQuantity;
-  final int itemWeight;
+
 
   Parcel({
     required this.id,
@@ -20,8 +19,7 @@ class Parcel {
     required this.recipientArea,
     required this.recipientAddress,
     required this.amountToCollect,
-    required this.itemDescription,
-    required this.itemQuantity,
-    required this.itemWeight,
+    required this.invoice,
+
   });
 }
