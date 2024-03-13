@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import '../models/Parcel.dart';
 
 class ParcelDetailScreen extends StatelessWidget {
@@ -20,7 +19,8 @@ class ParcelDetailScreen extends StatelessWidget {
           children: [
             Text('Recipient Name: ${parcel.recipientName}'),
             Text('Recipient Phone: ${parcel.recipientPhone}'),
-            // Add more details here as needed
+            Text('Recipient Address: ${parcel.recipientCity}'),
+            Text('Total ammount: ${parcel.amountToCollect}'),
           ],
         ),
       ),
