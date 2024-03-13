@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../api_service/AuthController.dart';
+import '../api_service/ApiController.dart';
 import '../models/Parcel.dart';
 import 'Parcel_Details.dart';
 
@@ -13,6 +13,10 @@ class HomeScreen extends StatelessWidget {
   TextEditingController amountToCollectController = TextEditingController();
 
   void _showAddParcelDialog(BuildContext context) {
+    recipientNameController.text = "";
+    recipientPhoneController.text = "";
+    amountToCollectController.text = "";
+    recipientCityController.text = "";
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -49,13 +53,14 @@ class HomeScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                 apiController.createParcel("", {
-                   'recipientName': recipientNameController.text,
-                   'recipientPhone': recipientPhoneController.text,
-                   'recipientCity': recipientCityController.text,
-                   'amountToCollect': double.parse(amountToCollectController.text),
-
-                 });
+                apiController.createParcel("", {
+                  'recipientName': recipientNameController.text,
+                  'recipientPhone': recipientPhoneController.text,
+                  'recipientCity': recipientCityController.text,
+                  'amountToCollect':
+                      double.parse(amountToCollectController.text),
+                });
+                Navigator.of(context).pop();
               },
               child: Text('Add'),
             ),
@@ -65,7 +70,63 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _showEditParcelDialog(BuildContext context, Parcel parcel) {
+    recipientNameController.text = parcel.recipientName;
+    recipientPhoneController.text = parcel.recipientPhone;
+    recipientCityController.text = parcel.recipientCity;
+    amountToCollectController.text = parcel.amountToCollect.toString();
 
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Parcel'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(labelText: 'Recipient Name'),
+                controller: recipientNameController,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Recipient Phone'),
+                controller: recipientPhoneController,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Recipient City'),
+                controller: recipientCityController,
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Amount to Collect'),
+                controller: amountToCollectController,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                apiController.updateParcel(parcel.id, {
+                  'recipientName': recipientNameController.text,
+                  'recipientPhone': recipientPhoneController.text,
+                  'recipientCity': recipientCityController.text,
+                  'amountToCollect':
+                      double.parse(amountToCollectController.text),
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,10 +143,7 @@ class HomeScreen extends StatelessWidget {
                 Map<String, String> queryParams = {
                   'recipientName': value,
                 };
-
-                // Call fetchParcels method with the updated query parameters
-                apiController.fetchParcels("",queryParams);
-                // Implement search functionality here
+                apiController.fetchParcels("", queryParams);
               },
               decoration: InputDecoration(
                 labelText: 'searh the recipent name',
@@ -106,12 +164,24 @@ class HomeScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     Parcel parcel = apiController.parcels[index];
                     return ListTile(
-                      title: Text(parcel.recipientName),
-                      subtitle: Text(parcel.recipientPhone),
+                      title: Text(parcel.recipientName ?? ''),
+                      subtitle: Text(parcel.recipientPhone ?? ''),
                       onTap: () {
                         // Navigate to parcel detail screen
                         Get.to(ParcelDetailScreen(parcel: parcel));
                       },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              // Show edit parcel dialog
+                              _showEditParcelDialog(context, parcel);
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -122,7 +192,8 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showAddParcelDialog(context); // Call function to show add parcel dialog
+          _showAddParcelDialog(
+              context); // Call function to show add parcel dialog
         },
         child: Icon(Icons.add),
       ),
